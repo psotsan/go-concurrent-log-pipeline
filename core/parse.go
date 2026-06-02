@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -19,6 +20,11 @@ type LogEntry struct {
 	Timestamp time.Time
 	Level     string
 	Msg       string
+}
+
+type line struct {
+	n   int
+	str string
 }
 
 func validateLevel(level string) (string, error) {
@@ -54,25 +60,48 @@ func ParseLine(line string) (LogEntry, error) {
 	return entry, nil
 }
 
+func readLines(r io.Reader) <-chan line {
+	out := make(chan line)
+	scanner := bufio.NewScanner(r)
+
+	go func() {
+		defer close(out)
+		n := 0
+		for scanner.Scan() {
+			n++
+			l := line{
+				n:   n,
+				str: scanner.Text(),
+			}
+			out <- l
+		}
+	}()
+
+	return out
+}
+
 func Process(r io.Reader, w io.Writer, errW io.Writer, workers int) error {
 	var err error
+	var wg sync.WaitGroup
 	stats := make(map[string]int)
-	line := 0
-	scanner := bufio.NewScanner(r)
-	for scanner.Scan() {
-		line++
-		entry, err := ParseLine(scanner.Text())
 
-		stats[entry.Level]++
+	lines := readLines(r)
 
-		if err != nil {
-			fmt.Fprintf(errW, "line %d: %s", line, err.Error())
-		}
+	for range workers {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for l := range lines {
+				entry, err := ParseLine(l.str)
+				if err != nil {
+					fmt.Fprintf(errW, "line %d: %s", l.n, err)
+					return
+				}
+				stats[entry.Level]++
+			}
+		}()
 	}
-
-	if scanner.Err() != nil {
-		fmt.Fprintln(errW, scanner.Err())
-	}
+	wg.Wait()
 
 	fmt.Fprintf(w, "DEBUG: %d\nERROR: %d\nINFO: %d\nWARN: %d\n",
 		stats[LevelDebug], stats[LevelError], stats[LevelInfo], stats[LevelWarn])
