@@ -1,7 +1,9 @@
 package core
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"strings"
 	"time"
 )
@@ -50,4 +52,30 @@ func ParseLine(line string) (LogEntry, error) {
 	entry.Msg = strings.Trim(fields[2], " ")
 
 	return entry, nil
+}
+
+func Process(r io.Reader, w io.Writer, errW io.Writer, workers int) error {
+	var err error
+	stats := make(map[string]int)
+	line := 0
+	scanner := bufio.NewScanner(r)
+	for scanner.Scan() {
+		line++
+		entry, err := ParseLine(scanner.Text())
+
+		stats[entry.Level]++
+
+		if err != nil {
+			fmt.Fprintf(errW, "line %d: %s", line, err.Error())
+		}
+	}
+
+	if scanner.Err() != nil {
+		fmt.Fprintln(errW, scanner.Err())
+	}
+
+	fmt.Fprintf(w, "DEBUG: %d\nERROR: %d\nINFO: %d\nWARN: %d\n",
+		stats[LevelDebug], stats[LevelError], stats[LevelInfo], stats[LevelWarn])
+
+	return err
 }

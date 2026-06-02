@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 )
@@ -108,6 +109,65 @@ func TestParseLine(t *testing.T) {
 
 			if got != tt.want {
 				t.Fatalf("ParseLine(%q): expected %v; got %v", tt.name, tt.want, got)
+			}
+		})
+	}
+}
+
+func TestProcess(t *testing.T) {
+	ps := []struct {
+		name    string
+		r       strings.Reader
+		w       strings.Builder
+		errW    strings.Builder
+		want    string
+		wantErr string
+	}{
+		{
+			name: "valid line",
+			r:    *strings.NewReader("2025-01-15T10:00:01Z|INFO|Login OK"),
+			want: `DEBUG: 0
+ERROR: 0
+INFO: 1
+WARN: 0
+`,
+		},
+		{
+			name: "multiple valid lines",
+			r: *strings.NewReader(`2025-01-15T10:00:01Z|INFO|Login OK
+2025-01-15T10:00:02Z|ERROR|DB timeout
+2025-01-15T10:00:03Z|INFO|Login OK`),
+			want: `DEBUG: 0
+ERROR: 1
+INFO: 2
+WARN: 0
+`,
+		},
+		{
+			name: "wrong line",
+			r: *strings.NewReader(`2025-01-15T10:00:01Z|INFO|Login OK
+2025-01-15T10:00:02Z|ERROR|DB timeout
+2025-01-15T10:00:02Z|WRONG_LEVEL|DB timeout
+2025-01-15T10:00:03Z|INFO|Login OK`),
+			want: `DEBUG: 0
+ERROR: 1
+INFO: 2
+WARN: 0
+`,
+			wantErr: "line 3: Invalid log level \"WRONG_LEVEL\"",
+		},
+	}
+
+	for _, tt := range ps {
+		t.Run(tt.name, func(t *testing.T) {
+			Process(&tt.r, &tt.w, &tt.errW, 7)
+
+			if tt.errW.String() != tt.wantErr {
+				t.Fatalf("Process (%q): expected error output: %q; got %q", tt.name, tt.wantErr, &tt.errW)
+			}
+
+			if tt.w.String() != tt.want {
+				t.Fatalf("Process (%q): expected:\n%s\ngot:\n%s ", tt.name, tt.want, tt.w.String())
 			}
 		})
 	}
