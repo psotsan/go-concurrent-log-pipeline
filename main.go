@@ -11,6 +11,8 @@ import (
 
 const defaultWorkers = 4
 
+type openFunc func(string) (io.ReadCloser, error)
+
 type config struct {
 	path    string
 	workers int
@@ -18,7 +20,7 @@ type config struct {
 }
 
 func parseArgs(c *config, args []string, errW io.Writer) (*flag.FlagSet, error) {
-	name := args[0]
+	name := os.Args[0]
 	fs := flag.NewFlagSet(name, flag.ContinueOnError)
 	fs.SetOutput(errW)
 
@@ -36,7 +38,7 @@ func parseArgs(c *config, args []string, errW io.Writer) (*flag.FlagSet, error) 
 	return fs, err
 }
 
-func run(args []string, r io.Reader, w io.Writer, errW io.Writer) int {
+func run(args []string, r io.Reader, w io.Writer, errW io.Writer, openFn openFunc) int {
 	var c config
 
 	fs, err := parseArgs(&c, args, errW)
@@ -50,7 +52,12 @@ func run(args []string, r io.Reader, w io.Writer, errW io.Writer) int {
 	}
 
 	if c.path != "" {
-		r, err = os.Open(c.path)
+		if openFn == nil {
+			openFn = func(path string) (io.ReadCloser, error) {
+				return os.Open(path)
+			}
+		}
+		r, err = openFn(c.path)
 		if err != nil {
 			e := fmt.Errorf("Could not open file %s", c.path)
 			fmt.Fprintln(errW, e)
@@ -66,12 +73,16 @@ func run(args []string, r io.Reader, w io.Writer, errW io.Writer) int {
 }
 
 func main() {
-	args := os.Args[1:]
+	args := make([]string, 0)
+
+	if len(os.Args) > 1 {
+		args = os.Args[1:]
+	}
 	r := os.Stdin
 	w := os.Stdout
 	errW := os.Stderr
 
-	exit := run(args, r, w, errW)
+	exit := run(args, r, w, errW, nil)
 
 	os.Exit(exit)
 }
