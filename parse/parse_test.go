@@ -9,7 +9,7 @@ import (
 
 func genLargeData() string {
 	var ret strings.Builder
-	for range 100_000 {
+	for range 500_000 {
 		ret.WriteString("2025-01-15T10:00:01Z|INFO|Login OK\n")
 	}
 

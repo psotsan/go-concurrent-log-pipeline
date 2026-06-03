@@ -79,7 +79,7 @@ go test -race ./...
 # Run benchmarks (100k lines) with different worker counts
 go test -bench=. ./parse
 ```
-The benchmark generates 100 000 valid log lines and measures throughput for 1, 4 and 16 workers.
+The benchmark generates 500 000 valid log lines and measures throughput for 1, 4 and 16 workers.
 
 ## How it works
 

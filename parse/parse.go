@@ -97,7 +97,7 @@ func processLines(lines <-chan line, errors chan<- errStruct, stats *stats, wg *
 	// worker function to parse the input lines concurrently
 	defer wg.Done()
 	for l := range lines {
-		if strings.Trim(strings.Trim(l.str, " "), "\t") == "" {
+		if strings.TrimSpace(l.str) == "" {
 			continue
 		}
 		entry, err := parseLine(l.str)
