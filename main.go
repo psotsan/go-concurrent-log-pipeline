@@ -6,7 +6,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/psotsan/go-concurrent-log-pipeline/core"
+	"github.com/psotsan/go-concurrent-log-pipeline/parse"
 )
 
 const defaultWorkers = 4
@@ -65,7 +65,12 @@ func run(args []string, r io.Reader, w io.Writer, errW io.Writer, openFn openFun
 		}
 	}
 
-	err = core.Process(r, w, errW, c.workers)
+	if c.workers <= 0 {
+		c.workers = defaultWorkers
+		fmt.Fprintf(w, "workers must be > 0, falling back to %d workers\n", c.workers)
+	}
+
+	err = parse.Process(r, w, errW, c.workers)
 	if err != nil {
 		return 1
 	}

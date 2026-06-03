@@ -56,16 +56,30 @@ func TestRun(t *testing.T) {
 			wantReturn: 1,
 		},
 		{
-			name: "workers flag used",
+			name:       "workers flag used",
+			args:       []string{"-workers=6"},
+			r:          *strings.NewReader("2025-01-15T10:00:01Z|INFO|Login OK"),
+			want:       "DEBUG: 0\nERROR: 0\nINFO: 1\nWARN: 0\n",
+			wantReturn: 0,
 		},
 		{
-			name: "invalid lines",
+			name:    "invalid lines",
+			r:       *strings.NewReader("2025-01-15T10:00:01Z|DEBUG|Testing DB\n2025-01-15T10:00:01Z|DBG|Testing DB\n2025-01-15T10:00:01Z|INFO|Login OK\n2025-01-15T10:00:01Z|INFORM|Login OK\n"),
+			want:    "DEBUG: 1\nERROR: 0\nINFO: 1\nWARN: 0\n",
+			wantErr: "line 2: Invalid log level \"DBG\"\nline 4: Invalid log level \"INFORM\"\n",
 		},
 		{
-			name: "invalid arguments",
+			name:       "invalid argument",
+			args:       []string{"-argument"},
+			wantErr:    "flag provided but not defined: -argument\n" + helpStr,
+			wantReturn: 1,
 		},
 		{
-			name: "no input and no flags",
+			name:       "no input and no flags",
+			args:       []string{},
+			r:          *strings.NewReader(""),
+			want:       "DEBUG: 0\nERROR: 0\nINFO: 0\nWARN: 0\n",
+			wantReturn: 0,
 		},
 	}
 
