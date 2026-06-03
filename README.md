@@ -1,3 +1,4 @@
+[![Go Report Card](https://goreportcard.com/badge/github.com/psotsan/go-concurrent-log-pipeline)](https://goreportcard.com/report/github.com/psotsan/go-concurrent-log-pipeline)
 # Concurrent Log Pipeline
 
 Concurrent CLI tool that reads log lines (timestamp|level|message), counts occurrences of each level (DEBUG, ERROR, INFO, WARN), and prints the summary.  
