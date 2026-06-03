@@ -18,7 +18,7 @@ const (
 	LevelDebug = "DEBUG"
 )
 
-type LogEntry struct {
+type logEntry struct {
 	Timestamp time.Time
 	Level     string
 	Msg       string
@@ -47,24 +47,24 @@ func validateLevel(level string) (string, error) {
 	return level, nil
 }
 
-func ParseLine(line string) (LogEntry, error) {
-	var entry LogEntry
+func parseLine(line string) (logEntry, error) {
+	var entry logEntry
 	var err error
 
 	fields := strings.Split(line, "|")
 
 	if len(fields) != 3 {
-		return LogEntry{}, fmt.Errorf("%d fields found, expected 3", len(fields))
+		return logEntry{}, fmt.Errorf("%d fields found, expected 3", len(fields))
 	}
 
 	entry.Timestamp, err = time.Parse("2006-01-02T15:04:05Z", strings.Trim(fields[0], " "))
 	if err != nil {
-		return LogEntry{}, err
+		return logEntry{}, err
 	}
 
 	entry.Level, err = validateLevel(strings.Trim(fields[1], " "))
 	if err != nil {
-		return LogEntry{}, err
+		return logEntry{}, err
 	}
 
 	entry.Msg = strings.Trim(fields[2], " ")
@@ -73,6 +73,7 @@ func ParseLine(line string) (LogEntry, error) {
 }
 
 func readLines(r io.Reader) <-chan line {
+	// reads lines from the input concurrently with parsing already read lines
 	out := make(chan line)
 	scanner := bufio.NewScanner(r)
 
@@ -93,12 +94,13 @@ func readLines(r io.Reader) <-chan line {
 }
 
 func processLines(lines <-chan line, errors chan<- errStruct, stats *stats, wg *sync.WaitGroup) {
+	// worker function to parse the input lines concurrently
 	defer wg.Done()
 	for l := range lines {
 		if strings.Trim(strings.Trim(l.str, " "), "\t") == "" {
 			continue
 		}
-		entry, err := ParseLine(l.str)
+		entry, err := parseLine(l.str)
 		if err != nil {
 			errors <- errStruct{
 				str:  fmt.Sprintf("line %d: %s", l.n, err),
@@ -113,6 +115,7 @@ func processLines(lines <-chan line, errors chan<- errStruct, stats *stats, wg *
 }
 
 func arrangeErrors(errors <-chan errStruct, errW io.Writer, done chan<- struct{}) {
+	// concurrently reads errors from parser workers to write the errors deterministically ordered
 	defer func() {
 		done <- struct{}{}
 	}()
@@ -131,6 +134,7 @@ func arrangeErrors(errors <-chan errStruct, errW io.Writer, done chan<- struct{}
 	}
 }
 
+// Process orchestrates the reading from the input, the output and error output. It waits until arrangeErrors ends to return.
 func Process(r io.Reader, w io.Writer, errW io.Writer, workers int) error {
 	var err error
 	var wg sync.WaitGroup

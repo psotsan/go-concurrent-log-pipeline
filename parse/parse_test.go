@@ -74,13 +74,13 @@ func TestParseLine(t *testing.T) {
 	pls := []struct {
 		name    string
 		line    string
-		want    LogEntry
+		want    logEntry
 		wantErr error
 	}{
 		{
 			name: "valid line",
 			line: "2025-01-15T10:00:01Z|INFO|Login OK",
-			want: LogEntry{
+			want: logEntry{
 				Timestamp: validTime,
 				Level:     LevelInfo,
 				Msg:       "Login OK",
@@ -110,7 +110,7 @@ func TestParseLine(t *testing.T) {
 
 	for _, tt := range pls {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ParseLine(tt.line)
+			got, err := parseLine(tt.line)
 
 			if err != nil && err.Error() != tt.wantErr.Error() {
 				t.Fatalf("ParseLine (%q): expected %q; got %q", tt.name, tt.wantErr.Error(), err.Error())
