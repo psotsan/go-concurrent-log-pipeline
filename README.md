@@ -83,7 +83,7 @@ The benchmark generates 500 000 valid log lines and measures throughput for 1,
 
 ## How it works
 
-1. Lines are read asynchronously and pushed into a channel.
+1. Lines are read in an independent goroutine and pushed into a channel.
 
 2. A configurable pool of workers consumes lines from the channel, parses each line, and updates a shared statistics map protected by a mutex.
 
