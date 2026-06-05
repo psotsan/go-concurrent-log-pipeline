@@ -57,12 +57,14 @@ func run(args []string, r io.Reader, w io.Writer, errW io.Writer, openFn openFun
 				return os.Open(path)
 			}
 		}
-		r, err = openFn(c.path)
+		file, err := openFn(c.path)
 		if err != nil {
 			e := fmt.Errorf("Could not open file %s", c.path)
 			fmt.Fprintln(errW, e)
 			return 1
 		}
+		defer file.Close()
+		r = file
 	}
 
 	if c.workers <= 0 {
