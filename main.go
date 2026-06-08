@@ -69,7 +69,7 @@ func run(args []string, r io.Reader, w io.Writer, errW io.Writer, openFn openFun
 
 	if c.workers <= 0 {
 		c.workers = defaultWorkers
-		fmt.Fprintf(w, "workers must be > 0, falling back to %d workers\n", c.workers)
+		fmt.Fprintf(errW, "workers must be > 0, falling back to %d workers\n", c.workers)
 	}
 
 	err = parse.Process(r, w, errW, c.workers)
@@ -85,11 +85,8 @@ func main() {
 	if len(os.Args) > 1 {
 		args = os.Args[1:]
 	}
-	r := os.Stdin
-	w := os.Stdout
-	errW := os.Stderr
 
-	exit := run(args, r, w, errW, nil)
+	exit := run(args, os.Stdin, os.Stdout, os.Stderr, nil)
 
 	os.Exit(exit)
 }

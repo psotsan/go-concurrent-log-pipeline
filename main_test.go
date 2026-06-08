@@ -81,6 +81,14 @@ func TestRun(t *testing.T) {
 			want:       "DEBUG: 0\nERROR: 0\nINFO: 0\nWARN: 0\n",
 			wantReturn: 0,
 		},
+		{
+			name:       "0 workers",
+			args:       []string{"-workers=0"},
+			r:          *strings.NewReader("2025-01-15T10:00:01Z|INFO|Login OK"),
+			want:       "DEBUG: 0\nERROR: 0\nINFO: 1\nWARN: 0\n",
+			wantErr:    "workers must be > 0, falling back to 4 workers\n",
+			wantReturn: 0,
+		},
 	}
 
 	for _, tt := range rs {
