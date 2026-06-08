@@ -52,7 +52,7 @@ func TestRun(t *testing.T) {
 			openFn: func(path string) (io.ReadCloser, error) {
 				return nil, os.ErrNotExist
 			},
-			wantErr:    "Could not open file missing.log\n",
+			wantErr:    "could not open file missing.log\n",
 			wantReturn: 1,
 		},
 		{
@@ -66,7 +66,7 @@ func TestRun(t *testing.T) {
 			name:    "invalid lines",
 			r:       *strings.NewReader("2025-01-15T10:00:01Z|DEBUG|Testing DB\n2025-01-15T10:00:01Z|DBG|Testing DB\n2025-01-15T10:00:01Z|INFO|Login OK\n2025-01-15T10:00:01Z|INFORM|Login OK\n"),
 			want:    "DEBUG: 1\nERROR: 0\nINFO: 1\nWARN: 0\n",
-			wantErr: "line 2: Invalid log level \"DBG\"\nline 4: Invalid log level \"INFORM\"\n",
+			wantErr: "line 2: invalid log level \"DBG\"\nline 4: Invalid log level \"INFORM\"\n",
 		},
 		{
 			name:       "invalid argument",

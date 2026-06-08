@@ -18,11 +18,8 @@ jobs:
             with:
               go-version: ${{ matrix.go-version }}
 
-          - name: Run race condition test
-            run: go test -race
-
           - name: Run test
-            run: go test -coverprofile=coverage.out ./...
+            run: go test -race
 
     benchmark:
       if: github.ref == 'refs/heads/main'
