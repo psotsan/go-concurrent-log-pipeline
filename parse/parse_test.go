@@ -182,7 +182,7 @@ WARN: 0
 
 	for _, tt := range ps {
 		t.Run(tt.name, func(t *testing.T) {
-			Process(&tt.r, &tt.w, &tt.errW, 4)
+			_ = Process(&tt.r, &tt.w, &tt.errW, 4)
 
 			if tt.errW.String() != tt.wantErr {
 				t.Fatalf("Process (%q): expected error output: %q; got %q", tt.name, tt.wantErr, &tt.errW)

@@ -42,7 +42,7 @@ type errStruct struct {
 func validateLevel(level string) (string, error) {
 	level = strings.ToUpper(level)
 	if level != LevelInfo && level != LevelWarn && level != LevelError && level != LevelDebug {
-		return "", fmt.Errorf("Invalid log level %q", level)
+		return "", fmt.Errorf("invalid log level %q", level)
 	}
 	return level, nil
 }
@@ -114,10 +114,11 @@ func processLines(lines <-chan line, errors chan<- errStruct, stats *stats, wg *
 	}
 }
 
-func arrangeErrors(errors <-chan errStruct, errW io.Writer, done chan<- struct{}) {
+func arrangeErrors(errors <-chan errStruct, errW io.Writer, done chan<- error) {
 	// concurrently reads errors from parser workers to write the errors deterministically ordered
+	var err error
 	defer func() {
-		done <- struct{}{}
+		done <- err
 	}()
 
 	errSlice := make([]errStruct, 0)
@@ -130,7 +131,9 @@ func arrangeErrors(errors <-chan errStruct, errW io.Writer, done chan<- struct{}
 	})
 
 	for _, e := range errSlice {
-		fmt.Fprintln(errW, e.str)
+		if _, err = fmt.Fprintln(errW, e.str); err != nil {
+			return
+		}
 	}
 }
 
@@ -158,7 +161,7 @@ func Process(r io.Reader, w io.Writer, errW io.Writer, workers int) error {
 	close(errors)
 	<-arrangeDone
 
-	fmt.Fprintf(w, "DEBUG: %d\nERROR: %d\nINFO: %d\nWARN: %d\n",
+	_, err = fmt.Fprintf(w, "DEBUG: %d\nERROR: %d\nINFO: %d\nWARN: %d\n",
 		st.s[LevelDebug], st.s[LevelError], st.s[LevelInfo], st.s[LevelWarn])
 
 	return err

@@ -29,8 +29,10 @@ func parseArgs(c *config, args []string, errW io.Writer) (*flag.FlagSet, error) 
 	fs.BoolVar(&c.help, "help", false, "show help")
 
 	fs.Usage = func() {
-		fmt.Fprintf(errW, "usage: %s [options]\n", name)
-		fmt.Fprintln(errW, "Options:")
+		if _, err := fmt.Fprintf(errW, "usage: %s [options]\nOptions:\n", name); err != nil {
+			fmt.Fprintf(os.Stderr, "warning: error writing to buffer %v\n", errW)
+			return
+		}
 		fs.PrintDefaults()
 	}
 
@@ -59,17 +61,26 @@ func run(args []string, r io.Reader, w io.Writer, errW io.Writer, openFn openFun
 		}
 		file, err := openFn(c.path)
 		if err != nil {
-			e := fmt.Errorf("Could not open file %s", c.path)
-			fmt.Fprintln(errW, e)
+			e := fmt.Errorf("could not open file %s", c.path)
+			if _, er := fmt.Fprintln(errW, e); er != nil {
+				fmt.Fprintf(os.Stderr, "warning: error writing to buffer %v\n", errW)
+			}
 			return 1
 		}
-		defer file.Close()
+		defer func() {
+			if err := file.Close(); err != nil {
+				fmt.Fprintf(os.Stderr, "warning: error closing log file: %v\n", file)
+			}
+		}()
 		r = file
 	}
 
 	if c.workers <= 0 {
 		c.workers = defaultWorkers
-		fmt.Fprintf(errW, "workers must be > 0, falling back to %d workers\n", c.workers)
+		if _, err = fmt.Fprintf(errW, "workers must be > 0, falling back to %d workers\n", c.workers); err != nil {
+			fmt.Fprintf(os.Stderr, "warning: error writing to buffer %v\n", errW)
+			return 1
+		}
 	}
 
 	err = parse.Process(r, w, errW, c.workers)
