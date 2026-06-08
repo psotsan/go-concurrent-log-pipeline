@@ -147,7 +147,7 @@ func Process(r io.Reader, w io.Writer, errW io.Writer, workers int) error {
 	}
 
 	errors := make(chan errStruct)
-	arrangeDone := make(chan struct{})
+	arrangeDone := make(chan error)
 
 	lines := readLines(r)
 
