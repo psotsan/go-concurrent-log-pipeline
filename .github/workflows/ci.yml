@@ -62,7 +62,7 @@ jobs:
           run: docker build -t log-pipeline .
         
         - name: Run container with test log file
-          run: docker run --rm -v ${{ github.workspace }}/testdata:/data log-pipeline -input /data/test.log > output.txt 2>errors.txt
+          run: docker run --rm -v ${{ github.workspace }}/test_data:/data log-pipeline -input /data/test.log > output.txt 2>errors.txt
 
         - name: Check DEBUG
           run: "grep -q \"DEBUG: 0\" output.txt || (echo \"test failed: expected DEBUG: 0\" && exit 1)"
