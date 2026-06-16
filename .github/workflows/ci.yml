@@ -65,16 +65,21 @@ jobs:
           run: docker run --rm -v ./testdata:/data log-pipeline -input /data/test.log > output.txt 2>errors.txt
 
         - name: Check DEBUG
-          run: grep -q "DEBUG: 0" output.txt || (echo "test failed: expected DEBUG: 0" && exit 1)
+          run: |
+          grep -q "DEBUG: 0" output.txt || (echo "test failed: expected DEBUG: 0" && exit 1)
 
-        - name: Check 
-          run: grep -q "ERROR: 1" output.txt || (echo "test failed: expected ERROR: 1" && exit 1)
+        - name: Check ERROR
+          run: |
+          grep -q "ERROR: 1" output.txt || (echo "test failed: expected ERROR: 1" && exit 1)
 
         - name: Check INFO
-          run: grep -q "INFO: 0" output.txt || (echo "test failed: expected INFO: 2" && exit 1)
+          run: |
+          grep -q "INFO: 2" output.txt || (echo "test failed: expected INFO: 2" && exit 1)
 
         - name: Check WARN
-          run: grep -q "WARN: 0" output.txt || (echo "test failed: expected WARN: 0" && exit 1)
+          run: |
+          grep -q "WARN: 0" output.txt || (echo "test failed: expected WARN: 0" && exit 1)
 
         - name: Check error output
-          run: grep -q "line 3: invalid log level" errors.txt || (echo "test failed: line 3: invalid log level" && exit 1)
+          run: |
+          grep -q "line 3: invalid log level" errors.txt || (echo "test failed: line 3: invalid log level" && exit 1)
