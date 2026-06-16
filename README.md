@@ -1,5 +1,6 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/psotsan/go-concurrent-log-pipeline)](https://goreportcard.com/report/github.com/psotsan/go-concurrent-log-pipeline)
 [![Go CI](https://github.com/psotsan/go-concurrent-log-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/psotsan/go-concurrent-log-pipeline/actions/workflows/ci.yml)
+[![Docker](https://img.shields.io/badge/docker-ready-2496ED?style=flat&logo=docker&logoColor=white)](https://github.com/psotsan/go-concurrent-log-pipeline/pkgs/container/)
 # Concurrent Log Pipeline
 
 Concurrent CLI tool that reads log lines (timestamp|level|message), counts occurrences of each level (DEBUG, ERROR, INFO, WARN), and prints the summary.  
@@ -95,3 +96,30 @@ The benchmark generates 500 000 valid log lines and measures throughput for 1,
 5. After all workers finish, the final statistics are printed to stdout.
 
 This design pursues thread safety, preserve error ordering, and to make the tool robust for large log files.
+
+---
+
+## Docker
+
+Multi-stage containerization as a build and deployment exercise for Go CLI tools.
+
+### Build
+
+```bash
+docker build -t log-pipeline .
+```
+
+### Run with a file
+
+```bash
+docker run --rm -v ./test_data:/data log-pipeline -input /data/test.log
+```
+
+### Image size
+
+| Stage | Base image | Size |
+|---|---|---|
+| Build | golang:1.26-alpine | 68.1 MB |
+| Final | alpine:latest | 5.5 MB |
+
+Multi-stage reduces the final image to 8% size, keeping only the compiled binary in a minimal runtime.
